@@ -1,0 +1,13 @@
+*.jpg
+.vscode
+/cached_music
+/idea
+/etc
+/Include
+/Lib
+/memes
+/node_modules
+/scripts
+/share
+pyvenv.cfg
+testing.py
