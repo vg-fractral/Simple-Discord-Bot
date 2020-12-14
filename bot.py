@@ -161,4 +161,4 @@ async def on_ready():
     await client.change_presence(status=discord.Status.do_not_disturb, activity=active)
     print('Bot is ready.')
 
-client.run('Nzg2OTM1MjU1NTAwMDYyNzMw.X9NokQ.3IpooZHrK2YKgvzDzmFnSdjjtzk')
+client.run('token')
