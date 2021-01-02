@@ -6,9 +6,11 @@ import random
 import youtube_dl
 import asyncio
 
+last_song_name = "empty"
+coloring = ("css", 'diff', 'fix', 'json', 'ini', 'cs', 'tex')
 
 client = commands.Bot(command_prefix=commands.when_mentioned_or("."), description='Welcome to club \' Underground Novo Selo\'' )  # bot client holds the bot.
-    
+
 #######################################################################################################
 youtube_dl.utils.bug_reports_message = lambda: ''
 ytdl_format_options = {
@@ -49,7 +51,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
             # take first item from a playlist
             data = data['entries'][0]
         webpage_url = data.get('webpage_url')
-        print(type(data))
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data), webpage_url
@@ -57,7 +58,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
 ########################################################################################################
 
 
-coloring = ("css", 'diff', 'fix', 'json', 'ini', 'cs', 'tex')
 
 
 @client.command()
@@ -70,6 +70,7 @@ async def join(ctx):
 
 @client.command()
 async def leave(ctx):
+    await ctx.channel.purge(limit=1)
     voice_client = ctx.guild.voice_client
     if voice_client is not None:
         await voice_client.disconnect()
@@ -89,14 +90,12 @@ async def ping(ctx):
 
 @client.command(aliases=["p"])
 async def play(ctx, *, query=None):
+    await ctx.channel.purge(limit=1)
     if ctx.author.voice is not None:
         if query is None:
-            await ctx.channel.send('Give me a song to look for 📀')
+            await ctx.channel.send('Give me a song to look for �')
             return
         else:
-            if query.startswith("https://www.youtube.com/watch?v="):
-                await ctx.channel.purge(limit=1)
-            # server = ctx.guild
             voice_channel = ctx.author.voice.channel
             if ctx.voice_client is None:
                 vc = await voice_channel.connect()
@@ -104,7 +103,9 @@ async def play(ctx, *, query=None):
                 await ctx.voice_client.move_to(voice_channel)
                 vc = ctx.voice_client
             async with ctx.typing():
+                global last_song_name
                 player, url = await YTDLSource.from_url(query, loop=client.loop)
+                last_song_name = url #cache the last soung for .pl command
                 vc.play(player, after=lambda e: print("Player err %s" %e) if e else None)
                 mention = ctx.author.mention
                 await ctx.send(f'>>> Now playing :\n```{random.choice(coloring)}\n [{player.title}]```\n {url} {mention}')
@@ -117,23 +118,49 @@ async def play(ctx, *, query=None):
 
 @client.command()
 async def skip(ctx):
-    pass
+    pass ##todo
 
 
 @client.command(aliases=['PR', 'playrandom'])
 async def pr(ctx):
     await ctx.channel.send('Currently Disabled')
     return
-    # await ctx.send(f'This command should play a random song from local computer! it\'s not done yet')
 
 
-"Only people with the role of \"Popa\" can use this command"
+@client.command(help='This command plays the last soung played')
+async def pl(ctx):
+    if ctx.author.voice is not None:
+        if last_song_name == "empty":
+            await ctx.channel.send('Looks like the bot just started up and ther are is no hisotry')
+            return
+        else:
+            await ctx.channel.purge(limit=1)
+            voice_channel = ctx.author.voice.channel
+            if ctx.voice_client is None:
+                vc = await voice_channel.connect()
+            else:
+                await ctx.voice_client.move_to(voice_channel)
+                vc = ctx.voice_client
+            async with ctx.typing():
+                player, url = await YTDLSource.from_url(last_song_name, loop=client.loop)
+                vc.play(player, after=lambda e: print("Player err %s" %e) if e else None)
+                mention = ctx.author.mention
+                await ctx.send(f'>>> Now playing :\n```{random.choice(coloring)}\n [{player.title}]```\n {url} {mention}')
+    else:
+        await ctx.channel.send("You must be in a voice channel")
+        return
+
+"Only people with the role of \"Novoselec\" can use this command"
 @client.command(aliases=["c","clean"],help='This command clears messages in the current text channel [USE WITH CAUTION]')
-@commands.has_role("Popa")
-async def clear(ctx, *, amount=2):
-    if amount > 50:
+@commands.has_role("Novoselec")
+async def clear(ctx, *, amount=0):
+    if amount == 0 or amount == 1:
+        amount = 2
+    elif amount > 50:
         await ctx.channel.send("Cannot delete more than 50 at once")
         return
+    elif amount >= 2:
+        amount+=1
     await ctx.channel.purge(limit=amount)  # limit = amount
 
 
@@ -161,4 +188,4 @@ async def on_ready():
     await client.change_presence(status=discord.Status.do_not_disturb, activity=active)
     print('Bot is ready.')
 
-client.run('token')
+client.run('Nzg2OTM1MjU1NTAwMDYyNzMw.X9NokQ.K6XqTVLUVCmIXbOe0w7UQdDdDp4')

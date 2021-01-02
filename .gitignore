@@ -11,3 +11,5 @@
 /share
 pyvenv.cfg
 testing.py
+.idea
+.gitignore
