@@ -22,8 +22,8 @@
 #
 
 from . import Image
-from ._binary import i32le as i32
 from .PcxImagePlugin import PcxImageFile
+from ._binary import i32le as i32
 
 MAGIC = 0x3ADE68B1  # QUIZ: what's this value, then?
 
@@ -37,7 +37,6 @@ def _accept(prefix):
 
 
 class DcxImageFile(PcxImageFile):
-
     format = "DCX"
     format_description = "Intel DCX"
     _close_exclusive_fp_after_loading = False

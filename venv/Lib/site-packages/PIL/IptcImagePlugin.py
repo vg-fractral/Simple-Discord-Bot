@@ -18,9 +18,9 @@ import os
 import tempfile
 
 from . import Image, ImageFile
-from ._binary import i8
 from ._binary import i16be as i16
 from ._binary import i32be as i32
+from ._binary import i8
 from ._binary import o8
 
 COMPRESSION = {1: "raw", 5: "jpeg"}
@@ -48,7 +48,6 @@ def dump(c):
 
 
 class IptcImageFile(ImageFile.ImageFile):
-
     format = "IPTC"
     format_description = "IPTC/NAA"
 

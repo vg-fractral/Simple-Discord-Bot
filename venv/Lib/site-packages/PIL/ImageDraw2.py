@@ -23,7 +23,6 @@
 .. seealso:: :py:mod:`PIL.ImageDraw`
 """
 
-
 from . import Image, ImageColor, ImageDraw, ImageFont, ImagePath
 
 

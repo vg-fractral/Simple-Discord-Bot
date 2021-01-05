@@ -19,6 +19,7 @@ import sys
 
 from . import EpsImagePlugin
 
+
 ##
 # Simple PostScript graphics interface.
 

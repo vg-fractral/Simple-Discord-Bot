@@ -14,7 +14,6 @@
 
 """Binary input/output support routines."""
 
-
 from struct import pack, unpack_from
 
 
