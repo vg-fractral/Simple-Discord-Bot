@@ -15,8 +15,6 @@ for filename in os.listdir("./Cogs"):
 
 @client.command()
 async def hentai(ctx):
-    # await ctx.channel.send('Currently Disabled')
-    # return
     await ctx.channel.purge(limit=1)
     await ctx.channel.send(file=discord.File(choice(["./why.png", "nani.jpg"])))
 
@@ -25,8 +23,8 @@ async def hentai(ctx):
 async def on_ready():
     active = discord.Activity(
         type=discord.ActivityType.listening, name="The sound of code")
-    await client.change_presence(status=discord.Status.do_not_disturb, activity=active)
-    print('Bot is ready.')
+    await client.change_presence(status=discord.Status.online, activity=active)
+    print("Bot is online")
 
 
 client.run('Nzg2OTM1MjU1NTAwMDYyNzMw.X9NokQ.Uyhi-aNcmJmshZVIBtDt460HxU8')

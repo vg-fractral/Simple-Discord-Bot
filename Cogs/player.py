@@ -22,9 +22,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
         youtube_url = data.get('webpage_url')
         author = data.get("uploader")
         audio_stream_url = data['url']
+        views = data.get("view_count")
         thumnail_url = data.get("thumbnail")
         return cls(discord.FFmpegPCMAudio(audio_stream_url, **FFMPEG_OPTIONS),
-                   data=data), youtube_url, author, thumnail_url
+                   data=data), youtube_url, author, thumnail_url, views
 
 
 ytdl_format_options = {
@@ -71,10 +72,10 @@ class Player(commands.Cog):
                 return
             self.bot_voice_client = ctx.voice_client
             async with ctx.typing():
-                self.player, webpage_url, author, thumbnail_url = await YTDLSource.from_url(query)
+                self.player, webpage_url, author, thumbnail_url, views = await YTDLSource.from_url(query)
                 self.bot_voice_client.play(self.player, after=lambda e: print("Player err %s" % e) if e else None)
                 self.player.volume = self.volume
-                embed_object.description = (f"**{author}**")
+                embed_object.description = (f"**{author}**  ==> {views:,}")
                 embed_object.title = self.player.title
                 embed_object.set_image(url=thumbnail_url)
                 embed_object.url = webpage_url
@@ -130,6 +131,11 @@ class Player(commands.Cog):
             embed_object = discord.Embed(colour=discord.Colour.dark_purple(), type="rich",
                                          title="The bot is not playing at the moment")
             await ctx.channel.send(embed=embed_object)
+
+
+    @commands.command()
+    async def que(self):
+        pass
 
     @commands.Cog.listener()
     async def on_ready(self):
