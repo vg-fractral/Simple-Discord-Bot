@@ -1,18 +1,18 @@
 from asyncio import get_event_loop
-
 import discord
 from discord.ext import commands
 from youtube_dl import YoutubeDL
+
 
 purple = discord.Colour.dark_purple()
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
+    def __init__(self, source, *, data, volume=0.3):
         super().__init__(source, volume)
         self.data = data
-        self.title = data.get('title')
-        self.url = data.get('url')
+        # self.title = data.get('title')
+        # self.url = data.get('url')
 
     @classmethod
     async def from_url(cls, query, *, loop=None, volume):
@@ -27,11 +27,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         audio_stream_url = data['url']
         thumbnail_url = data.get("thumbnail")
         title = data.get("title")
-        views = data.get("view_count")
 
-        # print(data)
-
-        embed_template = discord.Embed(colour=purple, type="rich", description=(f"**{author}**  ==>  {views:,}"),
+        embed_template = discord.Embed(colour=purple, type="rich", description=f"**{author}**",
                                        url=youtube_url, title=title)
         embed_template.set_image(url=thumbnail_url)
 
