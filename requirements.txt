@@ -17,6 +17,7 @@ pycodestyle==2.6.0
 pycparser==2.20
 pylint==2.6.0
 PyNaCl==1.4.0
+python-dotenv==0.15.0
 rope==0.18.0
 six==1.15.0
 toml==0.10.2
