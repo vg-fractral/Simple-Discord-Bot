@@ -12,7 +12,7 @@ load_dotenv(".env")
 client = commands.Bot(command_prefix=commands.when_mentioned_or("."),
                       description='Welcome to club Novo Selo Underground')
 
-for filename in os.listdir("./Cogs"):
+for filename in os.listdir("Cogs"):
     if filename.endswith(".py"):
         client.load_extension(f"Cogs.{filename[:-3]}")
 
@@ -25,4 +25,4 @@ async def on_ready():
     print('Bot is ready.')
 
 
-client.run(os.getenv("BOT_TOKEN"))
+client.run(os.getenv("CLIENT_TOKEN"))
