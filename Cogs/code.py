@@ -32,10 +32,6 @@ class Code(commands.Cog):
                 print("file does not exist")
 
 
-    @commands.command()
-    async def on_ready(self):
-        print("Code cog Loaded")
-
 
 def setup(client):
     client.add_cog(Code(client))
