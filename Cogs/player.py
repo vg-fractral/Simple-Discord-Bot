@@ -92,12 +92,16 @@ class Player(commands.Cog):
         """Join a voice channel"""
         embed_object = discord.Embed(colour=purple, type="rich")
         u_vc = ctx.author.voice or None
+        b_vc = ctx.voice_client
         txt_channel = ctx.channel
         await txt_channel.purge(limit=1)
         if u_vc:
-            """If the user is in a voice channel, join that channel"""
-            await u_vc.channel.connect()
-            return True
+            if b_vc is None:
+                await u_vc.channel.connect()
+                return True
+            else:
+                await u_vc.move_to(u_vc.channel)
+                return True
         else:
             """The user is not in a voice channel"""
             embed_object.title = "You must be in a voice channel"
