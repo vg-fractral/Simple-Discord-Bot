@@ -1,7 +1,10 @@
+from asyncio import get_event_loop
+
 import discord
 from discord.ext import commands
-from asyncio import get_event_loop
 from youtube_dl import YoutubeDL
+
+purple = discord.Colour.dark_purple()
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -12,7 +15,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, query, *, loop=None):
+    async def from_url(cls, query, *, loop=None, volume):
         loop = loop or get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(query, download=False))
         if 'entries' in data:
@@ -22,9 +25,17 @@ class YTDLSource(discord.PCMVolumeTransformer):
         youtube_url = data.get('webpage_url')
         author = data.get("uploader")
         audio_stream_url = data['url']
-        thumnail_url = data.get("thumbnail")
-        return cls(discord.FFmpegPCMAudio(audio_stream_url, **FFMPEG_OPTIONS),
-                   data=data), youtube_url, author, thumnail_url
+        thumbnail_url = data.get("thumbnail")
+        title = data.get("title")
+        views = data.get("view_count")
+
+        # print(data)
+
+        embed_template = discord.Embed(colour=purple, type="rich", description=(f"**{author}**  ==>  {views:,}"),
+                                       url=youtube_url, title=title)
+        embed_template.set_image(url=thumbnail_url)
+
+        return cls(discord.FFmpegPCMAudio(audio_stream_url, **FFMPEG_OPTIONS), data=data, volume=volume), embed_template
 
 
 ytdl_format_options = {
@@ -50,7 +61,7 @@ FFMPEG_OPTIONS = {
 class Player(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.volume = 0.5
+        self.volume = 0.3
         self.last_song = None
         self.bot_voice_client = None
         self.player = None
@@ -71,16 +82,12 @@ class Player(commands.Cog):
                 return
             self.bot_voice_client = ctx.voice_client
             async with ctx.typing():
-                self.player, webpage_url, author, thumbnail_url = await YTDLSource.from_url(query)
-                self.bot_voice_client.play(self.player, after=lambda e: print("Player err %s" % e) if e else None)
-                self.player.volume = self.volume
-                embed_object.description = (f"**{author}**")
-                embed_object.title = self.player.title
-                embed_object.set_image(url=thumbnail_url)
-                embed_object.url = webpage_url
-                await txt_channel.send(embed=embed_object)
+                self.player, youtube_embed = await YTDLSource.from_url(query, volume=self.volume)
+                self.bot_voice_client.play(self.player, after=lambda e: print(f"Player err {e}") if e else None)
+                await txt_channel.send(embed=youtube_embed)
 
-    @commands.command(help='This command replays the last song that has been played', aliases=["re", "pl", "rp"], name="Replay")
+    @commands.command(help='This command replays the last song that has been played', aliases=["re", "pl", "rp"],
+                      name="Replay")
     async def replay(self, ctx):
         await self.play(ctx, query=self.last_song)
 
@@ -106,29 +113,34 @@ class Player(commands.Cog):
 
     @commands.command(help="This command controls the bot's volume", aliases=["v", "vol"], name="Volume")
     async def volume(self, ctx, *, volume=None):
-        embed_object = discord.Embed(colour=discord.Colour.dark_purple(), type="rich")
+        txt_channel = ctx.channel
+        await txt_channel.purge(limit=1)
+        embed_object = discord.Embed(colour=purple, type="rich")
         if volume is None:
-            embed_object.title = f"The volume is {self.volume*100:g}%"
-            await ctx.channel.send(embed=embed_object)
+            embed_object.title = f"The volume is {self.volume * 100:g}%"
+            await txt_channel.send(embed=embed_object)
             return
-        volume = float(volume)
-        if ((volume - 0) * (volume-130)) <= 0:
+        try:
+            volume = float(volume)
+        except Exception as e:
+            txt_channel.send(f"The volume cannot be \"{volume}\"")
+            return
+        if ((volume - 0) * (volume - 130)) <= 0:
             self.volume = float(volume / 100)
             if self.player:
                 self.player.volume = self.volume
             embed_object.title = f"The volume is now {volume:g}%"
-            await ctx.channel.send(embed=embed_object)
+            await txt_channel.send(embed=embed_object)
         else:
-            embed_object.title =f"The volume cannot be {volume:g}\n The volume must be within the range of 0 - 130"
-            await ctx.channel.send(embed=embed_object)
+            embed_object.title = f"The volume cannot be {volume:g}\n The volume must be within the range of 0 - 130"
+            await txt_channel.send(embed=embed_object)
 
     @commands.command(aliases=["s"], help="This command stops the audio player of the bot", name="Stop")
     async def stop(self, ctx):
         if self.bot_voice_client and self.bot_voice_client.is_playing():
             self.bot_voice_client.stop()
         else:
-            embed_object = discord.Embed(colour=discord.Colour.dark_purple(), type="rich",
-                                         title="The bot is not playing at the moment")
+            embed_object = discord.Embed(colour=purple, type="rich", title="The bot is not playing at the moment")
             await ctx.channel.send(embed=embed_object)
 
     @commands.Cog.listener()
