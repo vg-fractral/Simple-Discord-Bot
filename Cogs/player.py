@@ -143,6 +143,8 @@ class Player(commands.Cog):
             embed_object = discord.Embed(colour=purple, type="rich", title="The bot is not playing at the moment")
             await ctx.channel.send(embed=embed_object)
 
+    #todo: add queue
+
     @commands.Cog.listener()
     async def on_ready(self):
         print("Play cog loaded")
