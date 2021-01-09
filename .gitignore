@@ -13,3 +13,4 @@ pyvenv.cfg
 testing.py
 .idea
 .gitignore
+test.py

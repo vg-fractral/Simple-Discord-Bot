@@ -4,8 +4,6 @@ from discord.ext import commands
 from youtube_dl import YoutubeDL
 
 
-purple = discord.Colour.dark_purple()
-
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.3):
@@ -15,7 +13,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, query, volume):
         loop = get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(query, download=False))
+        data = await loop.run_in_executor(None, lambda: YTDL.extract_info(query, download=False))
         if 'entries' in data:
             # take first item from a playlist
             data = data['entries'][0]
@@ -46,11 +44,13 @@ YTDL_FORMAT_OPTIONS = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes\
 }
-ytdl = YoutubeDL(YTDL_FORMAT_OPTIONS)
+YTDL = YoutubeDL(YTDL_FORMAT_OPTIONS)
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn'
 }
+
+purple = discord.Colour.dark_purple()
 
 
 class Player(commands.Cog):
@@ -67,12 +67,13 @@ class Player(commands.Cog):
         txt_channel = ctx.channel
         embed_object = discord.Embed(colour=purple, type="rich")
         if query is None:
+            """Check to see if the user did not pass a query"""
             embed_object.title = "Please give me something to look for :mag_right:"
             await txt_channel.send(embed=embed_object)
             return
         else:
-            await self.join(ctx)
-            if ctx.author.voice is None:
+            """Join the voice channel of the user if there is one"""
+            if not await self.join(ctx):  # <<< returns False if the user is not in a voice channel"""
                 return
             self.last_song = query
             self.b_vc = ctx.voice_client
@@ -81,41 +82,48 @@ class Player(commands.Cog):
                 self.b_vc.play(self.player, after=lambda e: print(f"Player err {e}") if e else None)
                 await txt_channel.send(embed=youtube_embed)
 
-    @commands.command(help='This command replays the last song that has been played', aliases=["re", "pl", "rp"],
-                      name="Replay")
+    @commands.command(help='This command replays the last song that has been played', aliases=["pl"], name="Replay")
     async def replay(self, ctx):
+        """Replays the last song using the last query"""
         await self.play(ctx, query=self.last_song)
 
     @commands.command(help="This command makes the bot join your voice channel", aliases=["j"], name="Join")
     async def join(self, ctx):
-        """Joins a voice channel"""
+        """Join a voice channel"""
         embed_object = discord.Embed(colour=purple, type="rich")
         u_vc = ctx.author.voice or None
         txt_channel = ctx.channel
         await txt_channel.purge(limit=1)
         if u_vc:
+            """If the user is in a voice channel, join that channel"""
             await u_vc.channel.connect()
-            return
+            return True
         else:
+            """The user is not in a voice channel"""
             embed_object.title = "You must be in a voice channel"
             await txt_channel.send(embed=embed_object)
-            return
+            return False
 
     @commands.command(help="This command controls the bot's volume", aliases=["v", "vol"], name="Volume")
     async def volume(self, ctx, *, volume=None):
         txt_channel = ctx.channel
         await txt_channel.purge(limit=1)
         embed_object = discord.Embed(colour=purple, type="rich")
+        """Check if volume has been passed in"""
         if volume is None:
+            """If it's not, print the current volume"""
             embed_object.title = f"The volume is {self.volume * 100:g}%"
             await txt_channel.send(embed=embed_object)
             return
+
+        """Try converting to float to see if input was incorrect"""
         try:
             volume = float(volume)
         except Exception:
             embed_object.title=f"The volume cannot be \"{volume}\""
             txt_channel.send(embed=embed_object)
             return
+        """Change the Volume"""
         if ((volume - 0) * (volume - 130)) <= 0:
             self.volume = float(volume / 100)
             if self.player:
@@ -123,6 +131,7 @@ class Player(commands.Cog):
             embed_object.title = f"The volume is now {volume:g}%"
             await txt_channel.send(embed=embed_object)
         else:
+            """Volume is outside of the allowed range"""
             embed_object.title = f"The volume cannot be {volume:g}\nThe volume must be within the range of 0 - 130"
             await txt_channel.send(embed=embed_object)
 
@@ -136,7 +145,7 @@ class Player(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print("play cog loaded")
+        print("Play cog loaded")
 
 
 def setup(client):

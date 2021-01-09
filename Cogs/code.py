@@ -1,6 +1,6 @@
 from discord.ext import commands
 import bot
-
+import discord
 class Code(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -8,9 +8,10 @@ class Code(commands.Cog):
     @commands.command(help="This command prints out the source code of the bot")
     async def code(self, ctx, *, request_file=None):
         if request_file is None:
-            await ctx.channel.send(f"{bot.triple_curly}Please pass in as an argument the section of the code "
-                             "you want to get,\nFor example \".code Dev\" or \".code Player\"\n "
-                             f"You can see the different sections in the \".help\" command{bot.triple_curly}")
+            embed_obj = discord.Embed(colour=discord.Colour.dark_purple(), title=f"Please pass in as an argument the section of the code "
+                             "you want to get,\nFor example \".code Dev\" or \".code Player\"\n"
+                             f"You can see the different sections in the \".help\" command")
+            await ctx.channel.send(embed=embed_obj)
 
         else:
             try:
