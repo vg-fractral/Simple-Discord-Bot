@@ -100,7 +100,7 @@ class Player(commands.Cog):
                 await u_vc.channel.connect()
                 return True
             else:
-                await u_vc.move_to(u_vc.channel)
+                await b_vc.move_to(u_vc.channel)
                 return True
         else:
             """The user is not in a voice channel"""
