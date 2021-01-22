@@ -4,6 +4,9 @@ Firstly add a virtual environment;
 
 python -m venv venv
 
+
+Then we want to activate that new virtual environment:
+
 for Windows:
 venv/Scripts/activate.bat
 
